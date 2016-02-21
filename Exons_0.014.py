@@ -46,6 +46,7 @@ args = parser.parse_args()
 reftrantaxa = args.reference_taxon
 refgenome = args.reference_genome
 threads = args.threads
+asdf = "asdfadf"
 
 cwd = os.getcwd()
 
