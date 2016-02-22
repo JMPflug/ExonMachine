@@ -29,13 +29,13 @@ parser = argparse.ArgumentParser(description="Generates a list of candidate prob
 											Dependencies: Exonerate, Biopython")\
 
  											
-parser.add_argument("reference_taxon", help="Specify which taxon in your ortholog clusters to use as the source for reference sequences.",
+parser.add_argument("-reference_taxon", "-t", required=True, help="Specify which taxon in your ortholog clusters to use as the source for reference sequences.",
 					type=str)
 
-parser.add_argument("reference_genome", help="Specify a fasta file to use as the reference genome.",
+parser.add_argument("-reference_genome", "-g", required=True, help="Specify a fasta file to use as the reference genome.",
 					type=str)
 
-parser.add_argument("out_directory", help="Name to give output directory",
+parser.add_argument("-out_directory", "-o", required=True, help="Name to give output directory",
 					type=str)
 
 parser.add_argument("-T", "--threads", default=1, help="Number of threads to use for exonerate multithreading (default=1).",
@@ -46,7 +46,6 @@ args = parser.parse_args()
 reftrantaxa = args.reference_taxon
 refgenome = args.reference_genome
 threads = args.threads
-asdf = "asdfadf"
 
 cwd = os.getcwd()
 
@@ -61,19 +60,22 @@ def extract_reference_transcriptome_seqs(reftrantaxa, dir):
 	"""Reads a directory of multi-fasta orthologs as Bio.Seq objects
 	and writes them 
 	"""
+	print "extract_reference_transcriptome_seqs"
 	orthocount = 1
 	if not os.path.exists('ref_orthos'):
 		os.makedirs('ref_orthos')
 	for file in slistdir(dir):
 		for seq_record in SeqIO.parse(dir + file, "fasta"):
 			if reftrantaxa in seq_record.id:
-				name = 'Ortho' +  str(orthocount) + '_' + seq_record.id + '.fasta'
+				seq_record_unpiped = seq_record.id.replace("|", "_")
+				name = 'Ortho' +  str(orthocount) + '_' + seq_record_unpiped + '.fasta'
 				SeqIO.write(seq_record, './ref_orthos/' + name, "fasta")
 				orthocount += 1
 
 def run_exonerate(refgenome): #exonerate_genome_to_transcriptome
 	"""Compares reference genome and reference transcriptome to locate exons in orthologs.
 	"""
+	print "run_exonerate"
 	if not os.path.exists('./t2g_exn_files/'):
 		os.makedirs('./t2g_exn_files/')
 	for file in slistdir('./ref_orthos/'):
@@ -85,6 +87,7 @@ def run_exonerate(refgenome): #exonerate_genome_to_transcriptome
 				subprocess.call(command, stdout=f)
 
 def first_exonerate_parse(dir, newdir, prefix):
+	print "first_exonerate_parse"
 	cwd = os.getcwd()
 	if not os.path.exists(cwd + newdir):
 		os.makedirs(cwd + newdir)
@@ -113,6 +116,7 @@ def first_exonerate_parse(dir, newdir, prefix):
 
 
 def join_exons(dir, dest, name):
+	print "join_exons"
 	os.chdir(dir)
 	newcwd = os.getcwd()
 	if os.path.exists(name):
@@ -126,6 +130,7 @@ def join_exons(dir, dest, name):
 
  
 def split_mafft_alignments():
+	print "split_mafft_alignments"
 	locuscount = 1
 	if os.path.exists('./locus_log.txt'):
 		os.remove('./locus_log.txt')
@@ -137,14 +142,15 @@ def split_mafft_alignments():
 				foldername = './split_mafft_fasta/' + 'Locus' + str(locuscount)
 				if not os.path.exists(foldername):
 					os.makedirs(foldername)
-				fastaname = foldername + '/' + 'Locus' + str(locuscount) + '_' + seq_record.id + '.fasta'
-				namelog = 'Locus' + str(locuscount) + ' ' + seq_record.id
+				fastaname = foldername + '/' + 'Ortho' + str(locuscount) + '_' + seq_record.id + '.fasta'
+				namelog = 'Ortho' + str(locuscount) + ' ' + seq_record.id
 				with open('locus_log.txt', "a") as f:
 					f.write(namelog + '\n')
 				SeqIO.write(seq_record, fastaname, "fasta")
 			locuscount += 1
 
 def rename_exons():
+	print "rename_exons"
 	for orthofolder in os.listdir('./ref_exons/'):
 		if "DS_Store" not in orthofolder:
 			OFloc = './ref_exons/' + orthofolder
@@ -164,6 +170,7 @@ def rename_exons():
 								os.rename(oldname, newname)
 
 def process_locuslog(reftrantaxa):
+	print "process_locuslog"
 	if os.path.exists('./Locus_log_RefTaxa.txt'):
 		os.remove('./Locus_log_RefTaxa.txt')
 	with open('locus_log.txt') as f:
@@ -174,6 +181,7 @@ def process_locuslog(reftrantaxa):
 					g.write(wl + '\n')
 
 def ungap_split():
+	print "ungap_split"
 	for file in os.listdir('./split_mafft_fasta'):
 		if "Locus" in file:
 			for locusfolder in os.listdir('./split_mafft_fasta/' + file):
@@ -185,6 +193,7 @@ def ungap_split():
 						f.write(str(newseq))
 
 def find_in_alignment():
+	print "find_in_alignment"
 	if not os.path.exists('probes'):
 		os.makedirs('probes')
 	for file in os.listdir('./split_mafft_fasta/'):
@@ -212,13 +221,16 @@ def find_in_alignment():
 										subprocess.call(command, stdout=f)
 
 def exon_to_fasta():
+	print "exon_to_fasta"
 	cwd = os.getcwd()
 	if not os.path.exists('./probe_seqs'):
 		os.makedirs('./probe_seqs')
 	for file in os.listdir('./probes'):
 		if 'Exon' in file:
+			print file
 			for subfile in os.listdir('./probes/' + file):
-				if 'Locus' in subfile:
+				#print file + " " + subfile
+				if 'Ortho' in subfile:
 					EL = './probes/' + file + '/'
 					os.chdir(cwd + '/probes/' + file)
 					result = SearchIO.parse(subfile, 'exonerate-text')
@@ -232,6 +244,7 @@ def exon_to_fasta():
 					os.chdir(cwd)
 
 def ungap_split2(rootdir):
+	print "ungap_split2"
 	for file in os.listdir(rootdir):
 		if "DS_Store" not in file:
 			for locusfolder in os.listdir(rootdir + file):
@@ -243,6 +256,7 @@ def ungap_split2(rootdir):
 						f.write(str(newseq))
 
 def multirun_exonerate(refgenome):
+	print "multirun_exonerate"
 	if not os.path.exists('./t2g_exn_files/'):
 		os.makedirs('./t2g_exn_files/')
 	commands = []
@@ -258,33 +272,41 @@ def multirun_exonerate(refgenome):
 
 
 def multihold(commands):
+	print "multihold"
 	print "WARNING: Using Ctrl-c to stop this program will not work due to a bug in python multiprocessing. Use Ctrl-z and kill instead."
 	subprocess.call(commands, shell=True)
 
 def parallel_exonerate():
+	print "parallel_exonerate"
 	commands = multirun_exonerate(refgenome)
 	pool = mp.Pool(int(threads))
 	pool.map(multihold, commands)
 
-
+#Check here for problem
 def multirun_find_in_alignment():
+	print "multirun_find_in_alignment"
 	if not os.path.exists('probes'):
 		os.makedirs('probes')
 	commands = []
 	for file in os.listdir('./split_mafft_fasta/'):
+		#print file
 		if 'Locus' in file:
 			for subfile in os.listdir('./split_mafft_fasta/' + file):
 				for ffile in os.listdir('./ref_exons/'):
 					if "DS_Store" not in ffile:
 						for fffile in os.listdir('./ref_exons/'  + ffile):
-							if 'Locus' in fffile:
+							if 'RefExon' in fffile:
+								#print str(fffile) + "			fffile"
+								#print str(subfile) + "			subfile"
 								fn = fffile.split('_')
 								sn = subfile.split('_')
-								if fn[0] == sn[0]:
+								if fn[1] == sn[0]:
 									drffile =  './ref_exons/'  + ffile + '/' + fffile
 									drsubfile = './split_mafft_fasta/' + file + '/' + subfile
 									ffs = fffile.split('_')
-									newdir = './probes/' + file + '_' + ffs[1]
+									print ffs
+									print fffile
+									newdir = './probes/' + file + '_' + ffs[0].replace("Ref","")
 									if not os.path.exists(newdir):
 										os.makedirs(newdir)
 									outfile = newdir + '/' + fffile + '_vs_' + subfile 
@@ -297,19 +319,14 @@ def multirun_find_in_alignment():
 	return commands
 
 def parallel_find_in_alignment():
+	print "parallel_find_in_alignment"
 	commands = multirun_find_in_alignment()
-	print commands
+	#print str(commands) + "Commands"
 	pool = mp.Pool(int(threads))
 	pool.map(multihold, commands)
 
 
 def main():
-
-	if not os.path.exists(args.out_directory):
-		os.makedirs(args.out_directory)
-	else: 
-		print "Directory already exists. Exiting..."
-		exit
 
 	extract_reference_transcriptome_seqs(reftrantaxa, './orthologs/')
 	commands = multirun_exonerate(refgenome)
