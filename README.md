@@ -40,9 +40,9 @@ From the program folder, run:
 
 ### Output
 
-Apologies that the output of ExonMachine is -somewhat- extremely excessive (this will be fixed in later versions).
+Apologies that the output of ExonMachine is ~~somewhat~~ extremely excessive (this will be fixed in later versions).
 
-Individual FASTA files containing the probes for each specimen can be found in the `probe_seqs` folder. Probes grouped by locus can be found in `probes_merged`.
+Individual FASTA files containing the probes for each specimen can be found in the `probe_seqs` folder. Probes grouped by locus can be found in `probes_merged`. Descriptions of the other files and folders will be added here soon; however, the majority of these are intermediate files that are mainly useful for debugging.
 
 ### Arguments
 
