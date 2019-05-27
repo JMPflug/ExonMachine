@@ -2,6 +2,8 @@
 
 Generates a list of candidate probe loci from a set of aligned or unaligned transcriptome sequences in a specified folder using a reference genome to determine exon bondaries. Transcriptome sequences should be provided as individual multi-fasta files, one file per ortholog, in a folder in the current working directory.
 
+![A pastel nightmare](https://github.com/JMPflug/ExonMachine/blob/master/EM_flowchart.png)
+
 ### Dependencies: 
 
 Exonerate, Transdecoder, CD-HIT-EST, Biopython
